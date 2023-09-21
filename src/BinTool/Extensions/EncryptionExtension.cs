@@ -8,9 +8,15 @@ public static class EncryptionExtension
         {
             return string.Empty;
         }
-        coding = coding ?? Encoding.UTF8;
 
-        var encryptData = SHA1.HashData(payload.ToBytes(coding));
-        return encryptData.ToStr(coding);
+        if (coding == null)
+        {
+            coding = Encoding.UTF8;
+        }
+
+        var sha1 = SHA1.Create();
+        var originalPwd = coding.GetBytes(payload);
+        var encryPwd = sha1.ComputeHash(originalPwd);
+        return string.Join("", encryPwd.Select(b => string.Format("{0:x2}", b)).ToArray()).ToUpper();
     }
 }

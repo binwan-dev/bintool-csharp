@@ -23,4 +23,20 @@ public static class TypeExtension
 
         return coding.GetString(payload);
     }
+
+    public static short ToShort(this byte[]? payload,int startIndex=0,int count=0)
+    {
+        if(payload==null||payload.Length==0)
+        {
+            return 0;
+        }
+
+        if(count == 0)
+        {
+            count=payload.Length;
+        }
+
+        var buffer= payload.Skip(startIndex).Take(count).ToArray();
+        return BitConverter.ToInt16(buffer);
+    }
 }
