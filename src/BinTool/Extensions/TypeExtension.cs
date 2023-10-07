@@ -37,6 +37,6 @@ public static class TypeExtension
         }
 
         var buffer= payload.Skip(startIndex).Take(count).ToArray();
-        return BitConverter.ToInt16(buffer);
+        return BitConverter.ToInt16(buffer, 0);
     }
 }

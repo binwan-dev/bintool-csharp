@@ -50,7 +50,7 @@ namespace BinTool.Socketing
             data.NotNull("The data cannot be null!")
             .CheckLength(1, _setting.SendBufferSize, $"The messsage length out of limit! MessageCount: {data.Length}, AllowLength: 1-{_setting.SendBufferSize}");
 
-            _sendQueue.Enqueue(data);
+            _sendQueue.Enqueue(new ArraySegment<byte>(data));
 
             TrySend();
         }
@@ -161,7 +161,7 @@ namespace BinTool.Socketing
             var buffer = new ArraySegment<byte>(e.Buffer ?? new byte[0], 0, e.BytesTransferred);
             try
             {
-                _onDataReceived(buffer.ToArray());
+                Task.Run(() => { _onDataReceived(buffer.ToArray()); });
             }
             catch (Exception ex)
             {
@@ -208,7 +208,7 @@ namespace BinTool.Socketing
 
         public void Dispose()
         {
-            if (_disposed)
+             if (_disposed)
             {
                 return;
             }
