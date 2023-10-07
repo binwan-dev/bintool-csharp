@@ -39,4 +39,13 @@ public static class TypeExtension
         var buffer= payload.Skip(startIndex).Take(count).ToArray();
         return BitConverter.ToInt16(buffer, 0);
     }
+
+    public static int ToInt(this string strVal,int defaultVal=0)
+    {
+        if(string.IsNullOrWhiteSpace(strVal)||!int.TryParse(strVal,out int val))
+        {
+            return defaultVal;
+        }
+        return val;
+    }
 }
