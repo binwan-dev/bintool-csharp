@@ -40,7 +40,7 @@ public static class TypeExtension
         return BitConverter.ToInt16(buffer, 0);
     }
 
-    public static int ToInt(this string strVal,int defaultVal=0)
+    public static int ToInteger(this string strVal,int defaultVal=0)
     {
         if(string.IsNullOrWhiteSpace(strVal)||!int.TryParse(strVal,out int val))
         {

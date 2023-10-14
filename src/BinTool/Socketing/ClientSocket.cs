@@ -22,6 +22,7 @@ namespace BinTool.Socketing
         private readonly AutoResetEvent _connectWaitEvent;
         private TcpConnection? _tcpConnection;
         private readonly ILogger<TcpConnection> _tcpConnectionLog;
+        private int _reconnecting = 0;
 
         public ClientSocket(string ip, int port, Action<byte[]> onDataReceived, ILogger<TcpConnection> tcpConnectionLog, SocketSetting? setting = null)
         {
@@ -69,13 +70,12 @@ namespace BinTool.Socketing
 
         protected void HandleConnectCompleted(object? sender, SocketAsyncEventArgs e)
         {
+            _connectWaitEvent.Set();
             if (e.SocketError != SocketError.Success || !_socket.Connected)
             {
                 OnConnectionFailed(e.SocketError);
-                _connectWaitEvent.Set();
                 return;
             }
-            _connectWaitEvent.Set();
 
             _tcpConnection = new TcpConnection(_socket, _setting, _tcpConnectionLog, _onDataReceived, OnConnectionClosed);
             foreach (var connectionEvent in _connectionEventListener)
@@ -90,6 +90,8 @@ namespace BinTool.Socketing
             {
                 connectionEvent.ConnectFailed(RemoteEndPoint, socketError);
             }
+
+            TryReConnect();
         }
 
         private void OnConnectionClosed(TcpConnection connection, SocketError socketError)
@@ -97,6 +99,33 @@ namespace BinTool.Socketing
             foreach (var connectionEvent in _connectionEventListener)
             {
                 connectionEvent.ConnectClosed(connection, socketError);
+            }
+
+            if (socketError != SocketError.Shutdown && socketError != SocketError.Success)
+            {
+                TryReConnect();
+            }
+        }
+
+        private void TryReConnect()
+        {
+            if (!_setting.EnableReConnect || Interlocked.CompareExchange(ref _reconnecting, 1, 0) != 0)
+            {
+                return;
+            }
+
+            try
+            {
+                _tcpConnectionLog.LogInformation($"Reconnecting... RemoteEndPoint[{_address}:{_port}]");
+                Task.Run(() => { Connect(5000); });
+            }
+            catch (Exception ex)
+            {
+                _tcpConnectionLog.LogError(ex, $"Reconnect failed! RemoteEndPoint[{_address}:{_port}]");
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _reconnecting, 0);
             }
         }
     }
