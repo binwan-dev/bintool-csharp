@@ -12,7 +12,7 @@ namespace BinTool.Socketing
 {
     public class ClientSocket
     {
-        private readonly Socket _socket;
+        private Socket _socket;
         private readonly string _address;
         private readonly int _port;
         private readonly SocketAsyncEventArgs _connectArgs;
@@ -33,7 +33,6 @@ namespace BinTool.Socketing
             _tcpConnectionLog = tcpConnectionLog;
 
             _connectionEventListener = new List<ITcpConnectionEventListener>();
-            _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             _connectArgs = new SocketAsyncEventArgs();
             _connectArgs.RemoteEndPoint = new IPEndPoint(IPAddress.Parse(_address), _port);
             _connectArgs.Completed += HandleConnectCompleted;
@@ -48,11 +47,29 @@ namespace BinTool.Socketing
 
         public void Connect(int timeoutMillseconds = 5000)
         {
-            if (!_socket.ConnectAsync(_connectArgs))
+
+            try
             {
+                _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                var result = _socket.BeginConnect(_connectArgs.RemoteEndPoint, null, null);
+                result.AsyncWaitHandle.WaitOne(timeoutMillseconds);
+                if (!_socket.Connected)
+                {
+                    _socket.Close();
+                    _socket.Dispose();
+                    _connectArgs.SocketError = SocketError.TimedOut;
+                }
+                else
+                {
+                    _connectArgs.SocketError = SocketError.Success;
+                }
                 Task.Run(() => HandleConnectCompleted(_socket, _connectArgs));
             }
-            _connectWaitEvent.WaitOne(timeoutMillseconds);
+            catch(Exception ex) 
+            {
+                _tcpConnectionLog.LogError(ex, $"Connect has an error! RemoteEndPoint: {_connectArgs.RemoteEndPoint}");
+                Task.Run(() => HandleConnectCompleted(_socket, _connectArgs));
+            }
         }
 
         public void RegisterConnectionEventListener(ITcpConnectionEventListener eventListener)

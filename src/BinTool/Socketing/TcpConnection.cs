@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,11 +20,13 @@ namespace BinTool.Socketing
         private readonly SocketAsyncEventArgs _receiveSocketArgs;
         private readonly Action<byte[]> _onDataReceived;
         private readonly Action<TcpConnection, SocketError> _onConnectionClosed;
+        private readonly EndPoint _remoteEndPoint;
 
         private Socket _socket;
         private int _sending = 0;
         private int _receiving = 0;
         private bool _disposed = false;
+        private byte[] _lastData;
 
         public TcpConnection(Socket socket, SocketSetting? setting, ILogger<TcpConnection> log, Action<byte[]> onDataReceived, Action<TcpConnection, SocketError> onConnectionClosed)
         {
@@ -32,6 +35,8 @@ namespace BinTool.Socketing
             _log = log;
             _onDataReceived = onDataReceived.NotNull("The DataReceived action cannot be null!");
             _onConnectionClosed = onConnectionClosed.NotNull("The ConnectionClosed action cannot be null!");
+            _socket.SendTimeout = setting.SendTimeoutSeconds;
+            _socket.ReceiveTimeout = setting.ReceiveTimeoutSeconds;
 
             _sendQueue = new ConcurrentQueue<ArraySegment<byte>>();
             _sendSocketArgs = new SocketAsyncEventArgs();
@@ -39,6 +44,8 @@ namespace BinTool.Socketing
             _receiveSocketArgs = new SocketAsyncEventArgs();
             _receiveSocketArgs.SetBuffer(new byte[_setting.ReceiveBufferSize], 0, _setting.ReceiveBufferSize);
             _receiveSocketArgs.Completed += ReceiveCompleted;
+
+            _remoteEndPoint = _socket.RemoteEndPoint;
 
             Task.Run(TryReceive);
         }
@@ -86,12 +93,13 @@ namespace BinTool.Socketing
                 {
                     _log.LogWarning("Send process stop! socket connection was disconnected!");
                 }
-
+                 
                 if (!_sendQueue.TryDequeue(out ArraySegment<byte> data))
                 {
                     break;
                 }
 
+                _lastData = data.ToArray();
                 _sendSocketArgs.SetBuffer(data.ToArray(), 0, data.Count);
                 if (!_socket.SendAsync(_sendSocketArgs))
                 {
@@ -191,14 +199,13 @@ namespace BinTool.Socketing
                 return;
             }
 
-            var remoteEndpoint = _socket.RemoteEndPoint;
             try
             {
                 Dispose();
             }
             catch (Exception shutdownEx)
             {
-                _log.LogError($"The socket close has an error! RemoteEndPoint: {remoteEndpoint?.ToString()}", shutdownEx);
+                _log.LogError($"The socket close has an error! RemoteEndPoint: {_remoteEndPoint?.ToString()}", shutdownEx);
             }
             finally
             {

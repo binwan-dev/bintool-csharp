@@ -15,6 +15,10 @@ namespace BinTool.Socketing
         public int SendBufferSize { get; set; } = 1024 * 1024;
 
         public int ReceiveBufferSize { get; set; } = 1024 * 1024;
+
+        public int SendTimeoutSeconds { get; set; } = 2;
+
+        public int ReceiveTimeoutSeconds { get; set; } = 2;
     }
 
 }
