@@ -3,3 +3,4 @@ obj/
 .cache/
 .DS_Store
 .vs/
+.idea/

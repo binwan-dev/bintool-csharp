@@ -47,7 +47,6 @@ namespace BinTool.Socketing
 
         public void Connect(int timeoutMillseconds = 5000)
         {
-
             try
             {
                 _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
