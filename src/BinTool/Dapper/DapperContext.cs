@@ -16,7 +16,8 @@ namespace BinTool.Dapper
 
         public DapperContext()
         {
-            var options = DbContextOptionsBuilder.GetOptions(GetType());
+            var options = DbContextOptionsBuilder.GetOptions(GetType())??new DapperOptions();
+	    SetOptions(options);
             if (options == null || string.IsNullOrWhiteSpace(options.ConnectString))
             {
               throw new Exception("数据库连接字符串不能为空");
@@ -31,6 +32,10 @@ namespace BinTool.Dapper
         protected ILogger<DapperContext> Log => _log;
 
         public DbConnection DbConnection { get; private set; }
+
+	protected virtual void SetOptions(DapperOptions options)
+	{
+	}
 
         public DbTransaction BeginTransaction()
         {
