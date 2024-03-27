@@ -8,7 +8,7 @@ namespace BinTool.Socketing
 {
     public class SocketSetting
     {
-        public bool EnableReConnect { get; set; } = true;
+        public bool EnableReConnect { get; set; } = false;
 
         public int ReConnectMaxTimes { get; set; } = 3;
 

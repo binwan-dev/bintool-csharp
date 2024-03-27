@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
-
 using Microsoft.Extensions.Logging;
 
 namespace BinTool.Socketing
@@ -117,10 +111,7 @@ namespace BinTool.Socketing
                 connectionEvent.ConnectClosed(connection, socketError);
             }
 
-            if (socketError != SocketError.Shutdown && socketError != SocketError.Success)
-            {
-                TryReConnect();
-            }
+            TryReConnect();
         }
 
         private void TryReConnect()
