@@ -10,7 +10,9 @@ namespace BinTool.Socketing
     {
         public bool EnableReConnect { get; set; } = false;
 
-        public int ReConnectMaxTimes { get; set; } = 3;
+        public int ReconnectBaseIntervalSecond { get; set; } = 3;
+        
+        public int ReconnectMaxIntervalSecond { get; set; } = 60;
 
         public int SendBufferSize { get; set; } = 1024 * 1024;
 

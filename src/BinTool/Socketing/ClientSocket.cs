@@ -17,6 +17,7 @@ namespace BinTool.Socketing
         private TcpConnection? _tcpConnection;
         private readonly ILogger<TcpConnection> _tcpConnectionLog;
         private int _reconnecting = 0;
+        private int _reconnectInterval = 0;
 
         public ClientSocket(string ip, int port, Action<byte[]> onDataReceived, ILogger<TcpConnection> tcpConnectionLog, SocketSetting? setting = null)
         {
@@ -87,6 +88,7 @@ namespace BinTool.Socketing
                 return;
             }
 
+            _reconnectInterval = _setting.ReconnectBaseIntervalSecond;
             _tcpConnection = new TcpConnection(_socket, _setting, _tcpConnectionLog, _onDataReceived, OnConnectionClosed);
             foreach (var connectionEvent in _connectionEventListener)
             {
@@ -123,7 +125,14 @@ namespace BinTool.Socketing
 
             try
             {
-                _tcpConnectionLog.LogInformation($"Reconnecting... RemoteEndPoint[{_address}:{_port}]");
+                _tcpConnectionLog.LogWarning($"Reconnect will be {_reconnectInterval} second!");
+                Thread.Sleep(_reconnectInterval * 1000);
+                _reconnectInterval += _reconnectInterval;
+                _reconnectInterval = _reconnectInterval > _setting.ReconnectMaxIntervalSecond
+                    ? _setting.ReconnectMaxIntervalSecond
+                    : _reconnectInterval;
+                
+                _tcpConnectionLog.LogWarning($"Reconnecting... RemoteEndPoint[{_address}:{_port}]");
                 Task.Run(() => { Connect(5000); });
             }
             catch (Exception ex)
