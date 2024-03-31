@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinTool", "BinTool\BinTool.csproj", "{096BE7E9-F713-4EEA-976B-0658613889D8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinTool.Test.Console", "BinTool.Test.Console\BinTool.Test.Console.csproj", "{BB377B1A-AA68-4B4A-A3B7-34BB86FC680D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{096BE7E9-F713-4EEA-976B-0658613889D8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{096BE7E9-F713-4EEA-976B-0658613889D8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{096BE7E9-F713-4EEA-976B-0658613889D8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB377B1A-AA68-4B4A-A3B7-34BB86FC680D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB377B1A-AA68-4B4A-A3B7-34BB86FC680D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB377B1A-AA68-4B4A-A3B7-34BB86FC680D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB377B1A-AA68-4B4A-A3B7-34BB86FC680D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
-using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
 
@@ -51,6 +46,10 @@ namespace BinTool.Socketing
         }
 
         internal Socket Socket => _socket;
+
+        public bool Connected => _socket.Connected;
+
+        public EndPoint RemoteEndPoint => _socket.RemoteEndPoint; 
 
         public void QueueMessage(byte[] data)
         {

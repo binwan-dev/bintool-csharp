@@ -24,6 +24,8 @@ public static class TypeExtension
         return coding.GetString(payload);
     }
 
+    public static string ToStr(this byte[]? payload) => ToStr(payload, Encoding.UTF8);
+
     public static short ToShort(this byte[]? payload,int startIndex=0,int count=0)
     {
         if(payload==null||payload.Length==0)

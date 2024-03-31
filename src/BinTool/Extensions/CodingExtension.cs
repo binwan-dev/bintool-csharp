@@ -48,4 +48,14 @@ public static class CodingExtension
         encoding ??= Encoding.UTF8;
         return encoding.GetBytes(str);
     }
+
+    public static string Print(this byte[]? buffer,int startIndex=0, char space = ' ')
+    {
+        if (buffer == null || buffer.Length == 0)
+        {
+            return string.Empty;
+        }
+
+        return BitConverter.ToString(buffer, startIndex).Replace('-', space);
+    }
 }
