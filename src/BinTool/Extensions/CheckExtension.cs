@@ -4,17 +4,17 @@ public static class CheckExtension
 {
     public static T NotNull<T>(this T val, string tipsMessage)
     {
-        if (val == null)
-        {
-            throw new ArgumentNullException(tipsMessage);
-        }
+        if (val == null) throw new CheckException(tipsMessage);
 
         var strVal = val as string;
-        if (strVal != null && strVal == "")
-        {
-            throw new ArgumentNullException(tipsMessage);
-        }
+        if (strVal != null && strVal == "") throw new CheckException(tipsMessage);
 
+        return val;
+    }
+
+    public static string NotNullOrWhiteSpace(this string val, string tipsMessage)
+    {
+	if(string.IsNullOrWhiteSpace(val)) throw new CheckException(tipsMessage);
         return val;
     }
 
@@ -70,4 +70,35 @@ public static class CheckExtension
 
 	return val;
     }
+}
+
+public class CheckExceptionInfo
+{
+    public CheckExceptionInfo(string message) : this(999, message)
+    { }
+
+    public CheckExceptionInfo(int code, string message)
+    {
+        Code = code;
+        Message = message;
+    }
+
+    public int Code{ get; set; }
+
+    public string Message { get; set; } = string.Empty;
+}
+
+public class CheckException : Exception
+{
+    public CheckException(string message) : base(message)
+    {
+        Info = new CheckExceptionInfo(message);
+    }
+
+    public CheckException(CheckExceptionInfo info) : base(info.Message)
+    {
+        Info = info;
+    }
+
+    public CheckExceptionInfo Info{ get; set; }
 }

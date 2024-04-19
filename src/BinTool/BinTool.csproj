@@ -1,10 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>0.1.15</Version>
+    <Version>0.1.19</Version>
     <LangVersion>11</LangVersion>
     <PackageId>BinTool</PackageId>
     <Authors>Bin Wan</Authors>
@@ -12,7 +12,6 @@
     <PackageProjectUrl>https://github.com/binwan-dev/bintool-csharp</PackageProjectUrl>
     <RepositoryUrl>https://github.com/binwan-dev/bintool-csharp</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageReleaseNotes>1. Add Print method for byte array extend </PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>

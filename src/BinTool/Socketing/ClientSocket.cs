@@ -88,7 +88,7 @@ namespace BinTool.Socketing
                 return;
             }
 
-            _reconnectInterval = _setting.ReconnectBaseIntervalSecond;
+            _reconnectInterval = _setting.ReconnectBaseIntervalMillsecond;
             _tcpConnection = new TcpConnection(_socket, _setting, _tcpConnectionLog, _onDataReceived, OnConnectionClosed);
             foreach (var connectionEvent in _connectionEventListener)
             {
@@ -126,10 +126,10 @@ namespace BinTool.Socketing
             try
             {
                 _tcpConnectionLog.LogWarning($"Reconnect will be {_reconnectInterval} second!");
-                Thread.Sleep(_reconnectInterval * 1000);
+                Thread.Sleep(_reconnectInterval);
                 _reconnectInterval += _reconnectInterval;
-                _reconnectInterval = _reconnectInterval > _setting.ReconnectMaxIntervalSecond
-                    ? _setting.ReconnectMaxIntervalSecond
+                _reconnectInterval = _reconnectInterval > _setting.ReconnectMaxIntervalMillsecond
+                    ? _setting.ReconnectMaxIntervalMillsecond
                     : _reconnectInterval;
                 
                 _tcpConnectionLog.LogWarning($"Reconnecting... RemoteEndPoint[{_address}:{_port}]");

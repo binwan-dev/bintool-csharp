@@ -9,18 +9,18 @@ Console.WriteLine("Origin:");
 Console.WriteLine(segment.ToArray().Print());
 Console.WriteLine();
 
-segment = segment.Slice(2);
-Console.WriteLine("Slice:2");
+segment = segment.Slice(2, 30);
+Console.WriteLine("Slice:2,30");
 Console.WriteLine(segment.ToArray().Print());
 Console.WriteLine();
-
-segment = segment.Slice(5);
-segment[0] = 11;
-Console.WriteLine("Slice:5");
-Console.WriteLine(segment.ToArray().Print());
-Console.WriteLine();
-
-Console.WriteLine("Origin inner array");
-Console.WriteLine(segment.Array.Print());
-Console.WriteLine();
-Console.WriteLine("Hello, World!");
+//
+// segment = segment.Slice(5);
+// segment[0] = 11;
+// Console.WriteLine("Slice:5");
+// Console.WriteLine(segment.ToArray().Print());
+// Console.WriteLine();
+//
+// Console.WriteLine("Origin inner array");
+// Console.WriteLine(segment.Array.Print());
+// Console.WriteLine();
+// Console.WriteLine("Hello, World!");

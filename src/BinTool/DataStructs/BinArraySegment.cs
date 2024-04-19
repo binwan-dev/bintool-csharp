@@ -43,7 +43,7 @@ public struct BinArraySegment<T>
     public BinArraySegment<T> Slice(int index, int count)
     {
         Offest += index;
-        Count = count + Offest > _array.Length ? _array.Length - Offest : Offest + count;
+        Count = count + Offest > _array.Length ? _array.Length - Offest : count;
         return new BinArraySegment<T>(_array, Offest, Count);
     }
 

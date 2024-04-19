@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BinTool.Socketing
+﻿namespace BinTool.Socketing
 {
     public class SocketSetting
     {
         public bool EnableReConnect { get; set; } = false;
 
-        public int ReconnectBaseIntervalSecond { get; set; } = 3;
+        public int ReconnectBaseIntervalMillsecond { get; set; } = 3000;
         
-        public int ReconnectMaxIntervalSecond { get; set; } = 60;
+        public int ReconnectMaxIntervalMillsecond { get; set; } = 60000;
 
         public int SendBufferSize { get; set; } = 1024 * 1024;
 

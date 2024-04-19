@@ -49,7 +49,7 @@ namespace BinTool.Socketing
 
         public bool Connected => _socket.Connected;
 
-        public EndPoint RemoteEndPoint => _socket.RemoteEndPoint; 
+        public EndPoint RemoteEndPoint => _remoteEndPoint; 
 
         public void QueueMessage(byte[] data)
         {
