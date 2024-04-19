@@ -12,9 +12,45 @@ public static class CheckExtension
         return val;
     }
 
+    public static T NotNull<T>(this T val, CheckExceptionInfo tips)
+    {
+	if(val==null)throw new CheckException(tips);
+        return val;
+    }
+
     public static string NotNullOrWhiteSpace(this string val, string tipsMessage)
     {
 	if(string.IsNullOrWhiteSpace(val)) throw new CheckException(tipsMessage);
+        return val;
+    }
+
+    public static string NotNullOrWhiteSpace(this string val, CheckExceptionInfo tipsMessage)
+    {
+	if(string.IsNullOrWhiteSpace(val)) throw new CheckException(tipsMessage);
+        return val;
+    }
+
+    public static bool MustBeTrue(this bool val, string tipsMessage)
+    {
+        if (!val) throw new CheckException(tipsMessage);
+        return val;
+    }
+
+    public static bool MustBeTrue(this bool val, CheckExceptionInfo tipsMessage)
+    {
+        if (!val) throw new CheckException(tipsMessage);
+        return val;
+    }
+
+    public static bool MustBeFalse(this bool val, string tipsMessage)
+    {
+        if (val) throw new CheckException(tipsMessage);
+        return val;
+    }
+
+    public static bool MustBeFalse(this bool val, CheckExceptionInfo tipsMessage)
+    {
+        if (val) throw new CheckException(tipsMessage);
         return val;
     }
 
