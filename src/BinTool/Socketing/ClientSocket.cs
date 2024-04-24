@@ -32,6 +32,7 @@ namespace BinTool.Socketing
             _connectArgs.RemoteEndPoint = new IPEndPoint(IPAddress.Parse(_address), _port);
             _connectArgs.Completed += HandleConnectCompleted;
             _connectWaitEvent = new AutoResetEvent(false);
+            _reconnectInterval = _setting.ReconnectBaseIntervalMillsecond;
         }
 
         public EndPoint RemoteEndPoint => _connectArgs.RemoteEndPoint!;
