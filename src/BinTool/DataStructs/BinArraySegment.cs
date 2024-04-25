@@ -19,7 +19,10 @@ public struct BinArraySegment<T>
 
     public int Count { get; set; } = 0;
 
-    public T[] Array => _array;
+    /// <summary>
+    /// Origin array
+    /// </summary>
+    public T[] OriginArray => _array;
 
     public T this[int index]
     {
@@ -37,14 +40,14 @@ public struct BinArraySegment<T>
 
     public BinArraySegment<T> Slice(int index)
     {
-        return Slice(index, _array.Length);
+        return Slice(index, Count);
     }
 
     public BinArraySegment<T> Slice(int index, int count)
     {
-        Offest += index;
-        Count = count + Offest > _array.Length ? _array.Length - Offest : count;
-        return new BinArraySegment<T>(_array, Offest, Count);
+        var newOffest = Offest + index;
+        var newCount = count >= Count ? Count - index : count;
+        return new BinArraySegment<T>(_array, newOffest, newCount);
     }
 
     public T[] ToArray()

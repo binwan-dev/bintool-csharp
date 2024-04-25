@@ -4,7 +4,8 @@ using System.ComponentModel;
 using System.Diagnostics;
 using BinTool.DataStructs;
 
-TestEnum();
+// TestEnum();
+TestSegment();
 
 static void TestEnum()
 {
@@ -40,25 +41,25 @@ static void TestSegment()
 {
     var arr = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
-    var segment = new BinArraySegment<byte>(arr);
+    var segment = new BinArraySegment<byte>(arr, 0, 30);
     Console.WriteLine("Origin:");
     Console.WriteLine(segment.ToArray().Print());
     Console.WriteLine();
 
-    segment = segment.Slice(2, 30);
-    Console.WriteLine("Slice:2,30");
+    segment = segment.Slice(2,6);
+    Console.WriteLine("Slice:2,6");
     Console.WriteLine(segment.ToArray().Print());
     Console.WriteLine();
     //
-    // segment = segment.Slice(5);
-    // segment[0] = 11;
-    // Console.WriteLine("Slice:5");
-    // Console.WriteLine(segment.ToArray().Print());
-    // Console.WriteLine();
+    segment = segment.Slice(4);
+    segment[0] = 11;
+    Console.WriteLine("Slice:4");
+    Console.WriteLine(segment.ToArray().Print());
+    Console.WriteLine();
     //
-    // Console.WriteLine("Origin inner array");
-    // Console.WriteLine(segment.Array.Print());
-    // Console.WriteLine();
+    Console.WriteLine("Origin inner array");
+    Console.WriteLine(segment.OriginArray.Print());
+    Console.WriteLine();
     // Console.WriteLine("Hello, World!");
 }
 
