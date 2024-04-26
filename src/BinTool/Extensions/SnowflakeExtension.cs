@@ -13,6 +13,6 @@ public static class SnowflakeExtension
 
     public static long NewId()
     {
-        rn Worker.NextId();
+        return Worker.NextId();
     }
 }
