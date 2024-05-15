@@ -12,14 +12,15 @@ namespace BinTool.Socketing
         private readonly SocketAsyncEventArgs _connectArgs;
         private readonly IList<ITcpConnectionEventListener> _connectionEventListener;
         private readonly SocketSetting _setting;
-        private readonly Action<byte[]> _onDataReceived;
+        private readonly Action<byte[],TcpConnection> _onDataReceived;
         private readonly AutoResetEvent _connectWaitEvent;
         private TcpConnection? _tcpConnection;
         private readonly ILogger<TcpConnection> _tcpConnectionLog;
         private int _reconnecting = 0;
         private int _reconnectInterval = 0;
 
-        public ClientSocket(string ip, int port, Action<byte[]> onDataReceived, ILogger<TcpConnection> tcpConnectionLog, SocketSetting? setting = null)
+        public ClientSocket(string ip, int port, Action<byte[], TcpConnection> onDataReceived,
+            ILogger<TcpConnection> tcpConnectionLog, SocketSetting? setting = null)
         {
             _address = ip.NotNull("IP 地址不能为空").IPv4("IP 必须是 IPv4 协议地址");
             _port = port.NotNull("Port 端口不能为空").Port("Port 端口必须是 0 - 65535 区间的整数");

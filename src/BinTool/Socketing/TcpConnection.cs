@@ -13,7 +13,7 @@ namespace BinTool.Socketing
         private readonly ConcurrentQueue<ArraySegment<byte>> _sendQueue;
         private readonly SocketAsyncEventArgs _sendSocketArgs;
         private readonly SocketAsyncEventArgs _receiveSocketArgs;
-        private readonly Action<byte[]> _onDataReceived;
+        private readonly Action<byte[], TcpConnection> _onDataReceived;
         private readonly Action<TcpConnection, SocketError> _onConnectionClosed;
         private readonly EndPoint _remoteEndPoint;
 
@@ -23,7 +23,7 @@ namespace BinTool.Socketing
         private bool _disposed = false;
         private byte[] _lastData;
 
-        public TcpConnection(Socket socket, SocketSetting? setting, ILogger<TcpConnection> log, Action<byte[]> onDataReceived, Action<TcpConnection, SocketError> onConnectionClosed)
+        public TcpConnection(Socket socket, SocketSetting? setting, ILogger<TcpConnection> log, Action<byte[], TcpConnection> onDataReceived, Action<TcpConnection, SocketError> onConnectionClosed)
         {
             _socket = socket.NotNull("The socket cannot be null!");
             _setting = setting ?? new SocketSetting();
@@ -168,7 +168,7 @@ namespace BinTool.Socketing
             var buffer = new ArraySegment<byte>(e.Buffer ?? new byte[0], 0, e.BytesTransferred);
             try
             {
-                Task.Run(() => { _onDataReceived(buffer.ToArray()); });
+                Task.Run(() => { _onDataReceived(buffer.ToArray(), this); });
             }
             catch (Exception ex)
             {
