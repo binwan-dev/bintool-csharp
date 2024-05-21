@@ -23,5 +23,5 @@ public class SqliteDapperContext:DapperContext
         return pagedData;
     }
 
-    protected override DbConnection CreateConnection() => new SqliteConnection();
+    protected override DbConnection CreateConnection() => new SqliteConnection(Options.ConnectString);
 }
