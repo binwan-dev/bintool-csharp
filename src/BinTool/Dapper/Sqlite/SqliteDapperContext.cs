@@ -6,6 +6,12 @@ namespace BinTool.Dapper.Sqlite;
 
 public class SqliteDapperContext:DapperContext
 {
+    public SqliteDapperContext():base()
+    {}
+    
+    public SqliteDapperContext(DapperOptions? options):base(options)
+    {}
+    
     protected override async Task<PagedData<T>> DoQueryPagedDataAsync<T>(string sql, object? param = null, string orderByField = "", int pageSize = 20,
         int pageNumber = 1)
     {

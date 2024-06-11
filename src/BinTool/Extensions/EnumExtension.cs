@@ -37,7 +37,11 @@ public static class EnumExtension
     
     public static EnumData<T> GetEnumData<T>(this T value) where T : Enum
     {
-        if (!_enumDicts.TryGetValue(typeof(T).FullName, out var enums)) return new EnumData<T>();
+        if (!_enumDicts.TryGetValue(typeof(T).FullName, out var enums))
+        {
+            var array = GetEnumList(value);
+            return array.FirstOrDefault(p => p.Name == value.ToString()) ?? new EnumData<T>();
+        }
         
         var enumDataList = (EnumDataList<T>) enums;
         if (!enumDataList.EnumData.TryGetValue(value.ToString(), out var enumData)) return new EnumData<T>();

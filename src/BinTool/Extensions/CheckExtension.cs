@@ -2,59 +2,63 @@ namespace System;
 
 public static class CheckExtension
 {
-    public static T NotNull<T>(this T val, string tipsMessage)
+    public static T NotNull<T>(this T val, string tipsMessage, Dictionary<string,string>? data=null)
     {
         if (val == null) throw new CheckException(tipsMessage);
 
         var strVal = val as string;
-        if (strVal != null && strVal == "") throw new CheckException(tipsMessage);
+        if (strVal != null && strVal == "")
+        {
+            if (data != null) tipsMessage = SetTipsData(tipsMessage, data);  
+            throw new CheckException(tipsMessage);
+        }
 
         return val;
     }
 
-    public static T NotNull<T>(this T val, CheckExceptionInfo tips)
+    public static T NotNull<T>(this T val, CheckExceptionInfo tips, Dictionary<string,string>? data=null)
     {
 	if(val==null)throw new CheckException(tips);
         return val;
     }
 
-    public static string NotNullOrWhiteSpace(this string val, string tipsMessage)
+    public static string NotNullOrWhiteSpace(this string val, string tipsMessage, Dictionary<string,string>? data=null)
     {
 	if(string.IsNullOrWhiteSpace(val)) throw new CheckException(tipsMessage);
         return val;
     }
 
-    public static string NotNullOrWhiteSpace(this string val, CheckExceptionInfo tipsMessage)
+    public static string NotNullOrWhiteSpace(this string val, CheckExceptionInfo tipsMessage, Dictionary<string,string>? data=null)
     {
 	if(string.IsNullOrWhiteSpace(val)) throw new CheckException(tipsMessage);
         return val;
     }
 
-    public static bool MustBeTrue(this bool val, string tipsMessage)
+    public static bool MustBeTrue(this bool val, string tipsMessage, Dictionary<string,string>? data=null)
     {
         if (!val) throw new CheckException(tipsMessage);
         return val;
     }
 
-    public static bool MustBeTrue(this bool val, CheckExceptionInfo tipsMessage)
+    public static bool MustBeTrue(this bool val, CheckExceptionInfo tipsMessage, Dictionary<string,string>? data=null)
     {
         if (!val) throw new CheckException(tipsMessage);
         return val;
     }
 
-    public static bool MustBeFalse(this bool val, string tipsMessage)
+    public static bool MustBeFalse(this bool val, string tipsMessage, Dictionary<string,string>? data=null)
     {
         if (val) throw new CheckException(tipsMessage);
         return val;
     }
 
-    public static bool MustBeFalse(this bool val, CheckExceptionInfo tipsMessage)
+    public static bool MustBeFalse(this bool val, CheckExceptionInfo tipsMessage, Dictionary<string,string>? data=null)
     {
         if (val) throw new CheckException(tipsMessage);
         return val;
     }
 
-    public static T[] CheckLength<T>(this T[] tlist, int min, int max, string tipsMessage)
+    public static T[] CheckLength<T>(this T[] tlist, int min, int max, string tipsMessage, Dictionary<string,string>? data=null)
     {
         if (tlist.Length < min || tlist.Length > max)
         {
@@ -64,7 +68,7 @@ public static class CheckExtension
         return tlist;
     }
 
-    public static string IPv4(this string val, string tipsMessage)
+    public static string IPv4(this string val, string tipsMessage, Dictionary<string,string>? data=null)
     {
         var regex = @"(\d{1,2})|(1\d{2})|(2[0-4]\d)|(25[0-5])";
         if (!Regex.IsMatch(val, regex))
@@ -75,7 +79,7 @@ public static class CheckExtension
         return val;
     }
 
-    public static int Port<T>(this T val, string tipsMessage)
+    public static int Port<T>(this T val, string tipsMessage, Dictionary<string,string>? data=null)
     {
         int? intVal;
 
@@ -97,14 +101,24 @@ public static class CheckExtension
         return intVal.Value;
     }
 
-    public static bool MustTrue(this bool val, string tipsMessage)
+    public static bool MustTrue(this bool val, string tipsMessage, Dictionary<string, string>? data = null)
     {
-	if(!val)
-	{
-	    throw new ArgumentException(tipsMessage);
-	}
+        if (!val)
+        {
+            throw new ArgumentException(tipsMessage);
+        }
 
-	return val;
+        return val;
+    }
+
+    private static string SetTipsData(string tips,Dictionary<string,string> data)
+    {
+        foreach (var item in data)
+        {
+            tips = tips.Replace(item.Key, item.Value);
+        }
+
+        return tips;
     }
 }
 

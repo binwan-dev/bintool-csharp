@@ -50,4 +50,22 @@ public static class TypeExtension
         }
         return val;
     }
+
+    public static long ToLong(this string strVal,long defaultVal=0)
+    {
+        if(string.IsNullOrWhiteSpace(strVal)||!long.TryParse(strVal,out long val))
+        {
+            return defaultVal;
+        }
+        return val;
+    }
+
+    public static double ToDouble(this string strVal,double defaultVal=0)
+    {
+        if(string.IsNullOrWhiteSpace(strVal)||!double.TryParse(strVal,out double val))
+        {
+            return defaultVal;
+        }
+        return val;
+    }
 }

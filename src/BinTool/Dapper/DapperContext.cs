@@ -1,5 +1,6 @@
 using System.Data;
 using System.Data.Common;
+using System.Runtime.CompilerServices;
 using Dapper;
 using DapperExtensions;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,30 +13,40 @@ namespace BinTool.Dapper
     public abstract class DapperContext : IDisposable
     {
         protected DapperOptions Options;
-        private readonly ILogger<DapperContext>? _log;
+        private ILogger<DapperContext>? _log;
 
         public DapperContext()
         {
-            var options = DbContextOptionsBuilder.GetOptions(GetType())??new DapperOptions();
-	    SetOptions(options);
-            if (options == null || string.IsNullOrWhiteSpace(options.ConnectString))
-            {
-              throw new Exception("数据库连接字符串不能为空");
-            }
-            
-            Options = options;
-            DbConnection = CreateConnection();
-            _log = BinToolDapperExtension.Provider?.GetService<ILogger<DapperContext>>();
-            _log?.LogDebug($"dapper 数据库连接开启，HashCode:{DbConnection.GetHashCode()}");
+            Init(DbContextOptionsBuilder.GetOptions(this.GetType()) ?? new DapperOptions());
+        }
+
+        public DapperContext(DapperOptions? options)
+        {
+            Init(options);
+        }
+
+        private void Init(DapperOptions? options)
+        {
+          options ??= new DapperOptions();
+          SetOptions(options);
+          if (options == null || string.IsNullOrWhiteSpace(options.ConnectString))
+          {
+            throw new Exception("数据库连接字符串不能为空");
+          }
+
+          Options = options;
+          DbConnection = CreateConnection();
+          _log = BinToolDapperExtension.Provider?.GetService<ILogger<DapperContext>>();
+          _log?.LogDebug($"dapper 数据库连接开启，HashCode:{DbConnection.GetHashCode()}");
         }
 
         protected ILogger<DapperContext> Log => _log;
 
         public DbConnection DbConnection { get; private set; }
 
-	protected virtual void SetOptions(DapperOptions options)
-	{
-	}
+        protected virtual void SetOptions(DapperOptions options)
+        {
+        }
 
         public DbTransaction BeginTransaction()
         {
