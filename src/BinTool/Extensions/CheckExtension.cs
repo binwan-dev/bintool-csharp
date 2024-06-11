@@ -2,7 +2,9 @@ namespace System;
 
 public static class CheckExtension
 {
-    public static T NotNull<T>(this T val, string tipsMessage, Dictionary<string,string>? data=null)
+    public static T NotNull<T>(this T val, string tipsMessage) => NotNull(val, tipsMessage, null);
+    
+    public static T NotNull<T>(this T val, string tipsMessage, Dictionary<string,string>? data)
     {
         if (val == null) throw new CheckException(tipsMessage);
 
@@ -16,70 +18,120 @@ public static class CheckExtension
         return val;
     }
 
-    public static T NotNull<T>(this T val, CheckExceptionInfo tips, Dictionary<string,string>? data=null)
+    public static T NotNull<T>(this T val, CheckExceptionInfo tips) => NotNull(val, tips, null);
+
+    public static T NotNull<T>(this T val, CheckExceptionInfo tips, Dictionary<string, string>? data)
     {
-	if(val==null)throw new CheckException(tips);
+        if (val == null)
+        {
+            if (data != null) tips.Message = SetTipsData(tips.Message, data);
+            throw new CheckException(tips);
+        }
         return val;
     }
 
-    public static string NotNullOrWhiteSpace(this string val, string tipsMessage, Dictionary<string,string>? data=null)
+    public static string NotNullOrWhiteSpace(this string val, string tipsMessage) => NotNullOrWhiteSpace(val, tipsMessage, null);
+    
+    public static string NotNullOrWhiteSpace(this string val, string tipsMessage, Dictionary<string, string>? data)
     {
-	if(string.IsNullOrWhiteSpace(val)) throw new CheckException(tipsMessage);
+        if (string.IsNullOrWhiteSpace(val))
+        {
+            if (data != null) tipsMessage = SetTipsData(tipsMessage, data);
+            throw new CheckException(tipsMessage);
+        }
         return val;
     }
 
-    public static string NotNullOrWhiteSpace(this string val, CheckExceptionInfo tipsMessage, Dictionary<string,string>? data=null)
+    public static string NotNullOrWhiteSpace(this string val, CheckExceptionInfo tipsMessage) => NotNullOrWhiteSpace(val, tipsMessage, null);
+    
+    public static string NotNullOrWhiteSpace(this string val, CheckExceptionInfo tipsMessage, Dictionary<string, string>? data)
     {
-	if(string.IsNullOrWhiteSpace(val)) throw new CheckException(tipsMessage);
+        if (string.IsNullOrWhiteSpace(val))
+        {
+            if (data != null) tipsMessage.Message = SetTipsData(tipsMessage.Message, data);
+            throw new CheckException(tipsMessage);
+        }
         return val;
     }
 
-    public static bool MustBeTrue(this bool val, string tipsMessage, Dictionary<string,string>? data=null)
+    public static bool MustBeTrue(this bool val, string tipsMessage) => MustBeTrue(val, tipsMessage, null);
+    
+    public static bool MustBeTrue(this bool val, string tipsMessage, Dictionary<string,string>? data)
     {
-        if (!val) throw new CheckException(tipsMessage);
+        if (!val)
+        {
+            if (data != null) tipsMessage = SetTipsData(tipsMessage, data);
+            throw new CheckException(tipsMessage);
+        }
         return val;
     }
 
-    public static bool MustBeTrue(this bool val, CheckExceptionInfo tipsMessage, Dictionary<string,string>? data=null)
+    public static bool MustBeTrue(this bool val, CheckExceptionInfo tipsMessage) => MustBeTrue(val, tipsMessage, null);
+    
+    public static bool MustBeTrue(this bool val, CheckExceptionInfo tipsMessage, Dictionary<string,string>? data)
     {
-        if (!val) throw new CheckException(tipsMessage);
+        if (!val)
+        {
+            if (data != null) tipsMessage.Message = SetTipsData(tipsMessage.Message, data);
+            throw new CheckException(tipsMessage);
+        }
         return val;
     }
 
-    public static bool MustBeFalse(this bool val, string tipsMessage, Dictionary<string,string>? data=null)
+    public static bool MustBeFalse(this bool val, string tipsMessage) => MustBeFalse(val, tipsMessage, null);
+    
+    public static bool MustBeFalse(this bool val, string tipsMessage, Dictionary<string,string>? data)
     {
-        if (val) throw new CheckException(tipsMessage);
+        if (val)
+        {
+            if (data != null) tipsMessage = SetTipsData(tipsMessage, data);
+            throw new CheckException(tipsMessage);
+        }
         return val;
     }
 
-    public static bool MustBeFalse(this bool val, CheckExceptionInfo tipsMessage, Dictionary<string,string>? data=null)
+    public static bool MustBeFalse(this bool val, CheckExceptionInfo tipsMessage) => MustBeFalse(val, tipsMessage, null);
+    
+    public static bool MustBeFalse(this bool val, CheckExceptionInfo tipsMessage, Dictionary<string,string>? data)
     {
-        if (val) throw new CheckException(tipsMessage);
+        if (val)
+        {
+            if (data != null) tipsMessage.Message = SetTipsData(tipsMessage.Message, data);
+            throw new CheckException(tipsMessage);
+        }
         return val;
     }
 
-    public static T[] CheckLength<T>(this T[] tlist, int min, int max, string tipsMessage, Dictionary<string,string>? data=null)
+    public static T[] CheckLength<T>(this T[] tlist, int min, int max, string tipsMessage) => CheckLength(tlist, min, max, tipsMessage, null);
+    
+    public static T[] CheckLength<T>(this T[] tlist, int min, int max, string tipsMessage, Dictionary<string,string>? data)
     {
         if (tlist.Length < min || tlist.Length > max)
         {
+            if (data != null) tipsMessage = SetTipsData(tipsMessage, data);
             throw new ArgumentException(tipsMessage);
         }
 
         return tlist;
     }
 
-    public static string IPv4(this string val, string tipsMessage, Dictionary<string,string>? data=null)
+    public static string IPv4(this string val, string tipsMessage) => IPv4(val, tipsMessage, null);
+    
+    public static string IPv4(this string val, string tipsMessage, Dictionary<string,string>? data)
     {
         var regex = @"(\d{1,2})|(1\d{2})|(2[0-4]\d)|(25[0-5])";
         if (!Regex.IsMatch(val, regex))
         {
+            if (data != null) tipsMessage = SetTipsData(tipsMessage, data);
             throw new ArgumentException(tipsMessage);
         }
 
         return val;
     }
 
-    public static int Port<T>(this T val, string tipsMessage, Dictionary<string,string>? data=null)
+    public static int Port<T>(this T val, string tipsMessage) => Port(val, tipsMessage, null);
+    
+    public static int Port<T>(this T val, string tipsMessage, Dictionary<string,string>? data)
     {
         int? intVal;
 
@@ -95,16 +147,20 @@ public static class CheckExtension
 
         if (intVal == null || intVal <= 0 || intVal > 65535)
         {
+            if (data != null) tipsMessage = SetTipsData(tipsMessage, data);
             throw new ArgumentException(tipsMessage);
         }
 
         return intVal.Value;
     }
 
-    public static bool MustTrue(this bool val, string tipsMessage, Dictionary<string, string>? data = null)
+    public static bool MustTrue(this bool val, string tipsMessage) => MustTrue(val, tipsMessage,null);
+
+    public static bool MustTrue(this bool val, string tipsMessage, Dictionary<string, string>? data)
     {
         if (!val)
         {
+            if (data != null) tipsMessage = SetTipsData(tipsMessage, data);
             throw new ArgumentException(tipsMessage);
         }
 
