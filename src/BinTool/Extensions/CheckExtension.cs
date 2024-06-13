@@ -180,6 +180,8 @@ public static class CheckExtension
 
 public class CheckExceptionInfo
 {
+    public CheckExceptionInfo(){}
+    
     public CheckExceptionInfo(string message) : this(999, message)
     { }
 
