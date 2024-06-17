@@ -115,7 +115,8 @@ namespace BinTool.Socketing
                 connectionEvent.ConnectClosed(connection, socketError);
             }
 
-            TryReConnect();
+            if(socketError != SocketError.Success) TryReConnect();
+            _tcpConnectionLog.LogWarning($"Socket has closed! RemoteIP[{_connectArgs.RemoteEndPoint}] SocketError[{socketError}]");
         }
 
         private void TryReConnect()
