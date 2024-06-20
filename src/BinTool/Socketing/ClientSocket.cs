@@ -126,26 +126,29 @@ namespace BinTool.Socketing
                 return;
             }
 
-            try
+            Task.Run(async () =>
             {
-                _tcpConnectionLog.LogWarning($"Reconnect will be {_reconnectInterval} second!");
-                Thread.Sleep(_reconnectInterval);
-                _reconnectInterval += _reconnectInterval;
-                _reconnectInterval = _reconnectInterval > _setting.ReconnectMaxIntervalMillsecond
-                    ? _setting.ReconnectMaxIntervalMillsecond
-                    : _reconnectInterval;
-                
-                _tcpConnectionLog.LogWarning($"Reconnecting... RemoteEndPoint[{_address}:{_port}]");
-                Task.Run(() => { Connect(5000); });
-            }
-            catch (Exception ex)
-            {
-                _tcpConnectionLog.LogError(ex, $"Reconnect failed! RemoteEndPoint[{_address}:{_port}]");
-            }
-            finally
-            {
-                Interlocked.Exchange(ref _reconnecting, 0);
-            }
+                try
+                {
+                    _tcpConnectionLog.LogWarning($"Reconnect will be {_reconnectInterval} second!");
+                    await Task.Delay(_reconnectInterval);
+                    _reconnectInterval += _reconnectInterval;
+                    _reconnectInterval = _reconnectInterval > _setting.ReconnectMaxIntervalMillsecond
+                        ? _setting.ReconnectMaxIntervalMillsecond
+                        : _reconnectInterval;
+
+                    _tcpConnectionLog.LogWarning($"Reconnecting... RemoteEndPoint[{_address}:{_port}]");
+                    Connect(5000);
+                }
+                catch (Exception ex)
+                {
+                    _tcpConnectionLog.LogError(ex, $"Reconnect failed! RemoteEndPoint[{_address}:{_port}]");
+                }
+                finally
+                {
+                    Interlocked.Exchange(ref _reconnecting, 0);
+                }
+            });
         }
     }
 }
