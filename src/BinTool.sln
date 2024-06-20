@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinTool", "BinTool\BinTool.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinTool.Test.Console", "BinTool.Test.Console\BinTool.Test.Console.csproj", "{BB377B1A-AA68-4B4A-A3B7-34BB86FC680D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BinTool.Socketing.TestConsole", "BinTool.Socketing.TestConsole\BinTool.Socketing.TestConsole.csproj", "{28B88B9F-291E-4FA8-90C4-9CEEEFDD6168}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{BB377B1A-AA68-4B4A-A3B7-34BB86FC680D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB377B1A-AA68-4B4A-A3B7-34BB86FC680D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB377B1A-AA68-4B4A-A3B7-34BB86FC680D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28B88B9F-291E-4FA8-90C4-9CEEEFDD6168}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28B88B9F-291E-4FA8-90C4-9CEEEFDD6168}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28B88B9F-291E-4FA8-90C4-9CEEEFDD6168}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28B88B9F-291E-4FA8-90C4-9CEEEFDD6168}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

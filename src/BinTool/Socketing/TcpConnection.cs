@@ -16,12 +16,14 @@ namespace BinTool.Socketing
         private readonly Action<byte[], TcpConnection> _onDataReceived;
         private readonly Action<TcpConnection, SocketError> _onConnectionClosed;
         private readonly EndPoint _remoteEndPoint;
+        private readonly ConcurrentQueue<byte[]> _receiveQueue = new();
 
         private Socket _socket;
         private int _sending = 0;
         private int _receiving = 0;
         private bool _disposed = false;
         private byte[] _lastData;
+        private int _handingReceiveData = 0;
 
         public TcpConnection(Socket socket, SocketSetting? setting, ILogger<TcpConnection> log, Action<byte[], TcpConnection> onDataReceived, Action<TcpConnection, SocketError> onConnectionClosed)
         {
@@ -70,40 +72,40 @@ namespace BinTool.Socketing
                 return;
             }
 
-            try
-            {
-                Send();
-            }
-            catch (Exception ex)
-            {
-                _log.LogError($"The socket send data has an Error! Remain unsend count: {_sendQueue.Count}, RemoteEndPoint: {_socket.RemoteEndPoint?.ToString()}", ex);
-            }
-            finally
-            {
-                Interlocked.Exchange(ref _sending, 0);
-            }
+            Task.Run(Send);
         }
 
         private void Send()
         {
-            while (true)
+            try
             {
-                if (!_socket.Connected)
+                while (true)
                 {
-                    _log.LogWarning("Send process stop! socket connection was disconnected!");
-                }
-                 
-                if (!_sendQueue.TryDequeue(out ArraySegment<byte> data))
-                {
-                    break;
-                }
+                    if (!_socket.Connected)
+                    {
+                        _log.LogWarning("Send process stop! socket connection was disconnected!");
+                    }
 
-                _lastData = data.ToArray();
-                _sendSocketArgs.SetBuffer(data.ToArray(), 0, data.Count);
-                if (!_socket.SendAsync(_sendSocketArgs))
-                {
-                    Task.Run(() => SendCompleted(_socket, _sendSocketArgs));
+                    if (!_sendQueue.TryDequeue(out ArraySegment<byte> data))
+                    {
+                        break;
+                    }
+
+                    _lastData = data.ToArray();
+                    _sendSocketArgs.SetBuffer(data.ToArray(), 0, data.Count);
+                    if (!_socket.SendAsync(_sendSocketArgs))
+                    {
+                        SendCompleted(_socket, _sendSocketArgs);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                CloseSocket($"The socket send data has an Error! Remain unsend count: {_sendQueue.Count}, RemoteEndPoint: {_socket.RemoteEndPoint?.ToString()}", SocketError.ConnectionReset, ex: ex);
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _sending, 0);
             }
         }
 
@@ -129,31 +131,32 @@ namespace BinTool.Socketing
                 return;
             }
 
-            try
-            {
-                Receive();
-            }
-            catch (Exception ex)
-            {
-                CloseSocket($"The socket receive data has an Error!", ex: ex);
-            }
-            finally
-            {
-                Interlocked.Exchange(ref _receiving, 0);
-            }
+            Task.Run(Receive);
         }
 
         private void Receive()
         {
-            if (!_socket.Connected)
+            try
             {
-                _log.LogWarning($"The socket was disconnected! stop receive data! RemoteEndPoint: {_socket.RemoteEndPoint?.ToString()}");
-                return;
-            }
+                if (!_socket.Connected)
+                {
+                    _log.LogWarning(
+                        $"The socket was disconnected! stop receive data! RemoteEndPoint: {_socket.RemoteEndPoint?.ToString()}");
+                    return;
+                }
 
-            if (!_socket.ReceiveAsync(_receiveSocketArgs))
+                if (!_socket.ReceiveAsync(_receiveSocketArgs))
+                {
+                    ReceiveCompleted(_socket, _receiveSocketArgs);
+                }
+            }
+            catch (Exception ex)
             {
-                Task.Run(() => ReceiveCompleted(_socket, _receiveSocketArgs));
+                CloseSocket($"The socket receive data has an Error!", SocketError.ConnectionReset, ex: ex);
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _receiving, 0);
             }
         }
 
@@ -165,14 +168,15 @@ namespace BinTool.Socketing
                 return;
             }
 
-            var buffer = new ArraySegment<byte>(e.Buffer ?? new byte[0], 0, e.BytesTransferred);
+            var buffer = e.Buffer.AsSpan(0, e.BytesTransferred).ToArray();
             try
             {
-                Task.Run(() => { _onDataReceived(buffer.ToArray(), this); });
+                _receiveQueue.Enqueue(buffer);
+                TryHandleReceiveData();
             }
             catch (Exception ex)
             {
-                _log.LogError($"The socket OnDataReceived has an error! RemoteEndPoint: {_socket.RemoteEndPoint?.ToString()}, Data: {buffer.ToArray().ToStr()}", ex);
+                _log.LogError($"The socket OnDataReceived has an error! RemoteEndPoint: {_socket.RemoteEndPoint?.ToString()}, Data: {buffer.ToStr()}", ex);
             }
             finally
             {
@@ -180,6 +184,37 @@ namespace BinTool.Socketing
             }
         }
 
+        #endregion
+        
+        #region HandleReceiveData
+
+        private void TryHandleReceiveData()
+        {
+            if(Interlocked.CompareExchange(ref _handingReceiveData,1,0)!=0)return;
+
+            Task.Run(HandleReceiveData);
+        }
+
+        private void HandleReceiveData()
+        {
+            try
+            {
+                while (_receiveQueue.TryDequeue(out var buffer))
+                {
+                    _onDataReceived(buffer, this);
+                }
+            }
+            catch (Exception e)
+            {
+                _log.LogError(e, $"Handle receive data has an exception! Will be 1 seconds retrying! RemoteEndPoint[{RemoteEndPoint}]");
+                Thread.Sleep(1000);
+                TryHandleReceiveData();
+            }
+            finally
+            {
+                Interlocked.Exchange(ref _handingReceiveData, 0);
+            }
+        }
         #endregion
 
         public void CloseSocket(string message, SocketError error = SocketError.Success, Exception? ex = null)
