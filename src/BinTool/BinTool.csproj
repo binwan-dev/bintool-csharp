@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <Version>0.1.41</Version>
+    <Version>0.1.42</Version>
     <LangVersion>11</LangVersion>
     <PackageId>BinTool</PackageId>
     <Authors>Bin Wan</Authors>
