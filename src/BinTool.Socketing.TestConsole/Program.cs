@@ -1,15 +1,19 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+
+
 using BinTool.Socketing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
 
 var service = new ServiceCollection();
 service.AddLogging();
 var provider = service.BuildServiceProvider();
 var log = provider.GetService<ILogger<TcpConnection>>();
 
-var socket = new ClientSocket("192.168.0.76",8088,OnMessageReceive,log);
+var handler = new Test();
+var socket = new ClientSocket("192.168.1.156",8088, handler, log);
 socket.Connect();
 Thread.Sleep(2000);
 while (true)
@@ -17,13 +21,19 @@ while (true)
     var buffer = new byte[] {1, 1, 0, 3, 0, 255, 255};
     Console.WriteLine(string.Join(" ", buffer));
     socket.QueueMessage(buffer);
-    Thread.Sleep(1000);
+    Test.Time = DateTime.Now;
+    Thread.Sleep(100);
 }
 
 Console.WriteLine("Hello, World!");
+Thread.Sleep(2000000);
 
-
-static void OnMessageReceive(byte[] buffer, TcpConnection tcpConnection)
+public class Test : IDataReceiveHandler
 {
-    Console.WriteLine($"{buffer[0]}, {buffer.Length}");
+    public static DateTime Time=DateTime.Now;
+
+    public void HandleData(byte[] buffer, TcpConnection connection)
+    {
+        Console.WriteLine($"{buffer[0]}, {buffer.Length} Time: {(DateTime.Now - Test.Time).TotalMilliseconds}");
+    }
 }

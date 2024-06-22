@@ -12,16 +12,16 @@ public class ServerSocket
     private readonly SocketAsyncEventArgs _acceptArgs;
     private readonly IList<ITcpConnectionEventListener> _connectionEventListener;
     private readonly SocketSetting _setting;
-    private readonly Action<byte[], TcpConnection> _onDataReceived;
+    private readonly IDataReceiveHandler _dataReceiveHandler;
     private TcpConnection? _tcpConnection;
     private readonly ILogger<TcpConnection> _tcpConnectionLog;
     private int _accepting = 0;
 
-    public ServerSocket(int port, Action<byte[], TcpConnection> onDataReceived, ILogger<TcpConnection> tcpConnectionLog,
+    public ServerSocket(int port, IDataReceiveHandler dataReceiveHandler, ILogger<TcpConnection> tcpConnectionLog,
         SocketSetting? setting = null)
     {
         _port = port.NotNull("Port 端口不能为空").Port("Port 端口必须是 0 - 65535 区间的整数");
-        _onDataReceived = onDataReceived.NotNull("数据处理函数不能为空！");
+        _dataReceiveHandler = dataReceiveHandler.NotNull("数据处理函数不能为空！");
         _setting = setting ?? new SocketSetting();
         _tcpConnectionLog = tcpConnectionLog;
 
@@ -89,7 +89,7 @@ public class ServerSocket
         }
 
         _tcpConnectionLog.LogInformation($"Socket endpoint accept success! SocketRemoteEndPoint: {e.RemoteEndPoint}");
-        _tcpConnection = new TcpConnection(_socket, _setting, _tcpConnectionLog, _onDataReceived, OnConnectionClosed);
+        _tcpConnection = new TcpConnection(_socket, _setting, _tcpConnectionLog, _dataReceiveHandler, OnConnectionClosed);
         foreach (var connectionEvent in _connectionEventListener)
         {
             connectionEvent.ConnectEstablished(_tcpConnection);

@@ -13,7 +13,7 @@ namespace BinTool.Socketing
         private readonly ConcurrentQueue<ArraySegment<byte>> _sendQueue;
         private readonly SocketAsyncEventArgs _sendSocketArgs;
         private readonly SocketAsyncEventArgs _receiveSocketArgs;
-        private readonly Action<byte[], TcpConnection> _onDataReceived;
+        private readonly IDataReceiveHandler _dataReceiveHandler;
         private readonly Action<TcpConnection, SocketError> _onConnectionClosed;
         private readonly EndPoint _remoteEndPoint;
         private readonly ConcurrentQueue<byte[]> _receiveQueue = new();
@@ -25,12 +25,12 @@ namespace BinTool.Socketing
         private byte[] _lastData;
         private int _handingReceiveData = 0;
 
-        public TcpConnection(Socket socket, SocketSetting? setting, ILogger<TcpConnection> log, Action<byte[], TcpConnection> onDataReceived, Action<TcpConnection, SocketError> onConnectionClosed)
+        public TcpConnection(Socket socket, SocketSetting? setting, ILogger<TcpConnection> log, IDataReceiveHandler dataReceiveHandler, Action<TcpConnection, SocketError> onConnectionClosed)
         {
             _socket = socket.NotNull("The socket cannot be null!");
             _setting = setting ?? new SocketSetting();
             _log = log;
-            _onDataReceived = onDataReceived.NotNull("The DataReceived action cannot be null!");
+            _dataReceiveHandler = dataReceiveHandler.NotNull("The DataReceived action cannot be null!");
             _onConnectionClosed = onConnectionClosed.NotNull("The ConnectionClosed action cannot be null!");
             _socket.SendTimeout = setting.SendTimeoutSeconds;
             _socket.ReceiveTimeout = setting.ReceiveTimeoutSeconds;
@@ -201,7 +201,7 @@ namespace BinTool.Socketing
             {
                 while (_receiveQueue.TryDequeue(out var buffer))
                 {
-                    _onDataReceived(buffer, this);
+                    _dataReceiveHandler.HandleData(buffer, this);
                 }
             }
             catch (Exception e)
