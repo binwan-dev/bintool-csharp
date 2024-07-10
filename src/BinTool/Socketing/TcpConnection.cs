@@ -13,7 +13,7 @@ namespace BinTool.Socketing
         private readonly ConcurrentQueue<ArraySegment<byte>> _sendQueue;
         private readonly SocketAsyncEventArgs _sendSocketArgs;
         private readonly SocketAsyncEventArgs _receiveSocketArgs;
-        private readonly IDataReceiveHandler _dataReceiveHandler;
+        private readonly Action<byte[],TcpConnection> _onMessageReceived;
         private readonly Action<TcpConnection, SocketError> _onConnectionClosed;
         private readonly EndPoint _remoteEndPoint;
         private readonly ConcurrentQueue<byte[]> _receiveQueue = new();
@@ -25,12 +25,12 @@ namespace BinTool.Socketing
         private byte[] _lastData;
         private int _handingReceiveData = 0;
 
-        public TcpConnection(Socket socket, SocketSetting? setting, ILogger<TcpConnection> log, IDataReceiveHandler dataReceiveHandler, Action<TcpConnection, SocketError> onConnectionClosed)
+        public TcpConnection(Socket socket, SocketSetting? setting, ILogger<TcpConnection> log, Action<byte[],TcpConnection> onMessageReceived, Action<TcpConnection, SocketError> onConnectionClosed)
         {
             _socket = socket.NotNull("The socket cannot be null!");
             _setting = setting ?? new SocketSetting();
             _log = log;
-            _dataReceiveHandler = dataReceiveHandler.NotNull("The DataReceived action cannot be null!");
+            _onMessageReceived = onMessageReceived.NotNull("The DataReceived action cannot be null!");
             _onConnectionClosed = onConnectionClosed.NotNull("The ConnectionClosed action cannot be null!");
             _socket.SendTimeout = setting.SendTimeoutSeconds;
             _socket.ReceiveTimeout = setting.ReceiveTimeoutSeconds;
@@ -147,7 +147,7 @@ namespace BinTool.Socketing
 
                 if (!_socket.ReceiveAsync(_receiveSocketArgs))
                 {
-                    ReceiveCompleted(_socket, _receiveSocketArgs);
+                    Task.Run(() => ReceiveCompleted(_socket, _receiveSocketArgs));
                 }
             }
             catch (Exception ex)
@@ -160,23 +160,24 @@ namespace BinTool.Socketing
             }
         }
 
-        private void ReceiveCompleted(object? sender, SocketAsyncEventArgs e)
+        private async void ReceiveCompleted(object? sender, SocketAsyncEventArgs e)
         {
             if (e.SocketError != SocketError.Success || e.BytesTransferred == 0)
             {
                 CloseSocket("The socket receive has an error!", e.SocketError);
                 return;
             }
-
-            var buffer = e.Buffer.AsSpan(0, e.BytesTransferred).ToArray();
+            
             try
             {
+                var buffer = e.Buffer.AsSpan(0, e.BytesTransferred).ToArray();
                 _receiveQueue.Enqueue(buffer);
                 TryHandleReceiveData();
             }
             catch (Exception ex)
             {
-                _log.LogError($"The socket OnDataReceived has an error! RemoteEndPoint: {_socket.RemoteEndPoint?.ToString()}, Data: {buffer.ToStr()}", ex);
+                _log.LogError($"The socket OnDataReceived has an error! RemoteEndPoint: {_socket.RemoteEndPoint?.ToString()}", ex);
+                await Task.Delay(1000);
             }
             finally
             {
@@ -201,7 +202,7 @@ namespace BinTool.Socketing
             {
                 while (_receiveQueue.TryDequeue(out var buffer))
                 {
-                    _dataReceiveHandler.HandleData(buffer, this);
+                    _onMessageReceived.Invoke(buffer, this);
                 }
             }
             catch (Exception e)

@@ -12,19 +12,19 @@ namespace BinTool.Socketing
         private readonly SocketAsyncEventArgs _connectArgs;
         private readonly IList<ITcpConnectionEventListener> _connectionEventListener;
         private readonly SocketSetting _setting;
-        private readonly IDataReceiveHandler _dataReceiveHandler;
+        private readonly Action<byte[], TcpConnection> _onMessageReceived;
         private readonly AutoResetEvent _connectWaitEvent;
         private TcpConnection? _tcpConnection;
         private readonly ILogger<TcpConnection> _tcpConnectionLog;
         private int _reconnecting = 0;
         private int _reconnectInterval = 0;
 
-        public ClientSocket(string ip, int port, IDataReceiveHandler dataReceiveHandler,
+        public ClientSocket(string ip, int port, Action<byte[], TcpConnection> onMessageReceived,
             ILogger<TcpConnection> tcpConnectionLog, SocketSetting? setting = null)
         {
             _address = ip.NotNull("IP 地址不能为空").IPv4("IP 必须是 IPv4 协议地址");
             _port = port.NotNull("Port 端口不能为空").Port("Port 端口必须是 0 - 65535 区间的整数");
-            _dataReceiveHandler = dataReceiveHandler.NotNull("数据处理函数不能为空！");
+            _onMessageReceived = onMessageReceived.NotNull("数据处理函数不能为空！");
             _setting = setting ?? new SocketSetting();
             _tcpConnectionLog = tcpConnectionLog;
 
@@ -91,7 +91,7 @@ namespace BinTool.Socketing
             }
 
             _reconnectInterval = _setting.ReconnectBaseIntervalMillsecond;
-            _tcpConnection = new TcpConnection(_socket, _setting, _tcpConnectionLog, _dataReceiveHandler, OnConnectionClosed);
+            _tcpConnection = new TcpConnection(_socket, _setting, _tcpConnectionLog, _onMessageReceived, OnConnectionClosed);
             foreach (var connectionEvent in _connectionEventListener)
             {
                 connectionEvent.ConnectEstablished(_tcpConnection);
