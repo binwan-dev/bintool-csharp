@@ -6,7 +6,7 @@ namespace BinTool.Socketing
 {
     public class ClientSocket
     {
-        private Socket _socket;
+        private Socket? _socket;
         private readonly string _address;
         private readonly int _port;
         private readonly SocketAsyncEventArgs _connectArgs;
@@ -16,13 +16,13 @@ namespace BinTool.Socketing
         private readonly AutoResetEvent _connectWaitEvent;
         private TcpConnection? _tcpConnection;
         private readonly ILogger<TcpConnection> _tcpConnectionLog;
-        private int _reconnecting = 0;
-        private int _reconnectInterval = 0;
+        private int _reconnecting;
+        private int _reconnectInterval;
 
         public ClientSocket(string ip, int port, Action<byte[], TcpConnection> onMessageReceived,
             ILogger<TcpConnection> tcpConnectionLog, SocketSetting? setting = null)
         {
-            _address = ip.NotNull("IP 地址不能为空").IPv4("IP 必须是 IPv4 协议地址");
+            _address = ip.NotNull("IP 地址不能为空").IPv4("IP 必须是 Ipv4 协议地址");
             _port = port.NotNull("Port 端口不能为空").Port("Port 端口必须是 0 - 65535 区间的整数");
             _onMessageReceived = onMessageReceived.NotNull("数据处理函数不能为空！");
             _setting = setting ?? new SocketSetting();
@@ -38,17 +38,17 @@ namespace BinTool.Socketing
 
         public EndPoint RemoteEndPoint => _connectArgs.RemoteEndPoint!;
 
-        public string ID { get; } = Guid.NewGuid().ToString();
+        public string Id { get; } = Guid.NewGuid().ToString();
 
-        internal Socket Socket => _socket;
+        internal Socket Socket => _socket!;
 
-        public void Connect(int timeoutMillseconds = 5000)
+        public void Connect(int timeoutMillSeconds = 5000)
         {
             try
             {
                 _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                 var result = _socket.BeginConnect(_connectArgs.RemoteEndPoint, null, null);
-                result.AsyncWaitHandle.WaitOne(timeoutMillseconds);
+                result.AsyncWaitHandle.WaitOne(timeoutMillSeconds);
                 if (!_socket.Connected)
                 {
                     _socket.Close();
@@ -84,17 +84,33 @@ namespace BinTool.Socketing
         protected void HandleConnectCompleted(object? sender, SocketAsyncEventArgs e)
         {
             _connectWaitEvent.Set();
-            if (e.SocketError != SocketError.Success || !_socket.Connected)
+            if (e.SocketError != SocketError.Success || !_socket!.Connected)
             {
                 OnConnectionFailed(e.SocketError);
                 return;
             }
 
             _reconnectInterval = _setting.ReconnectBaseIntervalMillsecond;
-            _tcpConnection = new TcpConnection(_socket, _setting, _tcpConnectionLog, _onMessageReceived, OnConnectionClosed);
-            foreach (var connectionEvent in _connectionEventListener)
+            
+            try
             {
-                connectionEvent.ConnectEstablished(_tcpConnection);
+                _tcpConnection = new TcpConnection(_socket, _setting, _tcpConnectionLog, _onMessageReceived, OnConnectionClosed);
+                foreach (var connectionEvent in _connectionEventListener)
+                {
+                    try
+                    {
+                        connectionEvent.ConnectEstablished(_tcpConnection);
+                    }
+                    catch (Exception ex)
+                    {
+                        _tcpConnectionLog.LogError(ex,
+                            $"Invoke ConnectEstablished Event failed! Target[{connectionEvent.GetType().FullName}]");
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                _tcpConnectionLog.LogError(exception, $"Create TcpConnection failed!");
             }
         }
 
@@ -102,7 +118,14 @@ namespace BinTool.Socketing
         {
             foreach (var connectionEvent in _connectionEventListener)
             {
-                connectionEvent.ConnectFailed(RemoteEndPoint, socketError);
+                try
+                {
+                    connectionEvent.ConnectFailed(RemoteEndPoint, socketError);
+                }
+                catch (Exception e)
+                {
+                    _tcpConnectionLog.LogError(e,$"Invoke ConnectFailed Event failed! Target[{connectionEvent.GetType().FullName}] SocketError[{socketError}]");
+                }
             }
 
             TryReConnect();
@@ -112,7 +135,14 @@ namespace BinTool.Socketing
         {
             foreach (var connectionEvent in _connectionEventListener)
             {
-                connectionEvent.ConnectClosed(connection, socketError);
+                try
+                {
+                    connectionEvent.ConnectClosed(connection, socketError);
+                }
+                catch (Exception e)
+                {
+                    _tcpConnectionLog.LogError(e, $"Invoke ConnectionClosed Event failed! Target[{connectionEvent.GetType().FullName}] SocketError[{socketError}]");
+                }
             }
 
             if(socketError != SocketError.Success) TryReConnect();
@@ -138,7 +168,7 @@ namespace BinTool.Socketing
                         : _reconnectInterval;
 
                     _tcpConnectionLog.LogWarning($"Reconnecting... RemoteEndPoint[{_address}:{_port}]");
-                    Connect(5000);
+                    Connect();
                 }
                 catch (Exception ex)
                 {

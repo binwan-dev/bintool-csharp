@@ -18,12 +18,11 @@ namespace BinTool.Socketing
         private readonly EndPoint _remoteEndPoint;
         private readonly ConcurrentQueue<byte[]> _receiveQueue = new();
 
-        private Socket _socket;
-        private int _sending = 0;
-        private int _receiving = 0;
-        private bool _disposed = false;
-        private byte[] _lastData;
-        private int _handingReceiveData = 0;
+        private Socket? _socket;
+        private int _sending;
+        private int _receiving;
+        private bool _disposed;
+        private int _handingReceiveData;
 
         public TcpConnection(Socket socket, SocketSetting? setting, ILogger<TcpConnection> log, Action<byte[],TcpConnection> onMessageReceived, Action<TcpConnection, SocketError> onConnectionClosed)
         {
@@ -32,7 +31,7 @@ namespace BinTool.Socketing
             _log = log;
             _onMessageReceived = onMessageReceived.NotNull("The DataReceived action cannot be null!");
             _onConnectionClosed = onConnectionClosed.NotNull("The ConnectionClosed action cannot be null!");
-            _socket.SendTimeout = setting.SendTimeoutSeconds;
+            _socket.SendTimeout = setting!.SendTimeoutSeconds;
             _socket.ReceiveTimeout = setting.ReceiveTimeoutSeconds;
 
             _sendQueue = new ConcurrentQueue<ArraySegment<byte>>();
@@ -42,16 +41,17 @@ namespace BinTool.Socketing
             _receiveSocketArgs.SetBuffer(new byte[_setting.ReceiveBufferSize], 0, _setting.ReceiveBufferSize);
             _receiveSocketArgs.Completed += ReceiveCompleted;
 
-            _remoteEndPoint = _socket.RemoteEndPoint;
+            if (!TryCloneRemoteEndPoint(_socket.RemoteEndPoint, out _remoteEndPoint!))
+                _remoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
 
             Task.Run(TryReceive);
         }
 
-        internal Socket Socket => _socket;
+        internal Socket? Socket => _socket;
 
-        public bool Connected => _socket.Connected;
+        public bool Connected => _socket?.Connected ?? false;
 
-        public EndPoint RemoteEndPoint => _remoteEndPoint; 
+        public EndPoint RemoteEndPoint => _remoteEndPoint;
 
         public void QueueMessage(byte[] data)
         {
@@ -81,17 +81,17 @@ namespace BinTool.Socketing
             {
                 while (true)
                 {
-                    if (!_socket.Connected)
+                    if (_socket == null || !_socket.Connected)
                     {
                         _log.LogWarning("Send process stop! socket connection was disconnected!");
+                        return;
                     }
 
                     if (!_sendQueue.TryDequeue(out ArraySegment<byte> data))
                     {
                         break;
                     }
-
-                    _lastData = data.ToArray();
+                    
                     _sendSocketArgs.SetBuffer(data.ToArray(), 0, data.Count);
                     if (!_socket.SendAsync(_sendSocketArgs))
                     {
@@ -101,7 +101,7 @@ namespace BinTool.Socketing
             }
             catch (Exception ex)
             {
-                CloseSocket($"The socket send data has an Error! Remain unsend count: {_sendQueue.Count}, RemoteEndPoint: {_socket.RemoteEndPoint?.ToString()}", SocketError.ConnectionReset, ex: ex);
+                CloseSocket($"The socket send data has an Error! Remain UnSend count: {_sendQueue.Count}, RemoteEndPoint: {RemoteEndPoint}", SocketError.ConnectionReset, ex: ex);
             }
             finally
             {
@@ -117,7 +117,7 @@ namespace BinTool.Socketing
                 return;
             }
 
-            _log.LogDebug($"Send message successed! RemoteEndPoint: {_socket.RemoteEndPoint?.ToString()}, Data: {e.Buffer?.ToStr()}");
+            _log.LogDebug($"Send message successes! RemoteEndPoint: {RemoteEndPoint}, Data: {e.Buffer?.ToStr()}");
         }
 
         #endregion
@@ -138,10 +138,9 @@ namespace BinTool.Socketing
         {
             try
             {
-                if (!_socket.Connected)
+                if (_socket == null || !_socket.Connected)
                 {
-                    _log.LogWarning(
-                        $"The socket was disconnected! stop receive data! RemoteEndPoint: {_socket.RemoteEndPoint?.ToString()}");
+                    _log.LogWarning($"The socket was disconnected! stop receive data! RemoteEndPoint: {RemoteEndPoint}");
                     return;
                 }
 
@@ -176,7 +175,7 @@ namespace BinTool.Socketing
             }
             catch (Exception ex)
             {
-                _log.LogError($"The socket OnDataReceived has an error! RemoteEndPoint: {_socket.RemoteEndPoint?.ToString()}", ex);
+                _log.LogError($"The socket OnDataReceived has an error! RemoteEndPoint: {RemoteEndPoint}", ex);
                 await Task.Delay(1000);
             }
             finally
@@ -240,7 +239,7 @@ namespace BinTool.Socketing
             }
             catch (Exception shutdownEx)
             {
-                _log.LogError($"The socket close has an error! RemoteEndPoint: {_remoteEndPoint?.ToString()}", shutdownEx);
+                _log.LogError($"The socket close has an error! RemoteEndPoint: {RemoteEndPoint}", shutdownEx);
             }
             finally
             {
@@ -257,8 +256,30 @@ namespace BinTool.Socketing
 
             _disposed = true;
 
+            if(_socket==null)return;
             _socket.Close();
             _socket.Dispose();
+        }
+
+        private bool TryCloneRemoteEndPoint(EndPoint endPoint, out EndPoint? remoteEndPoint)
+        {
+            remoteEndPoint = null;
+            try
+            {
+                if (endPoint is IPEndPoint ipEndPoint)
+                {
+                    var point = ipEndPoint.ToString().Split(':');
+                    remoteEndPoint = new IPEndPoint(IPAddress.Parse(point[0]), point[1].ToInteger());
+                    return true;
+                }
+
+                throw new NotImplementedException();
+            }
+            catch (Exception e)
+            {
+                _log.LogError(e, $"CloneRemoteEndPoint has failed!");
+                return false;
+            }
         }
 
     }
