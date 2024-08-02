@@ -160,19 +160,19 @@ namespace BinTool.Socketing
             {
                 try
                 {
-                    _tcpConnectionLog.LogWarning($"Reconnect will be {_reconnectInterval} second!");
+                    _tcpConnectionLog.LogDebug($"Reconnect will be {_reconnectInterval} second!");
                     await Task.Delay(_reconnectInterval);
                     _reconnectInterval += _reconnectInterval;
                     _reconnectInterval = _reconnectInterval > _setting.ReconnectMaxIntervalMillsecond
                         ? _setting.ReconnectMaxIntervalMillsecond
                         : _reconnectInterval;
 
-                    _tcpConnectionLog.LogWarning($"Reconnecting... RemoteEndPoint[{_address}:{_port}]");
+                    _tcpConnectionLog.LogDebug($"Reconnecting... RemoteEndPoint[{_address}:{_port}]");
                     Connect();
                 }
                 catch (Exception ex)
                 {
-                    _tcpConnectionLog.LogError(ex, $"Reconnect failed! RemoteEndPoint[{_address}:{_port}]");
+                    _tcpConnectionLog.LogDebug(ex, $"Reconnect failed! RemoteEndPoint[{_address}:{_port}]");
                 }
                 finally
                 {
