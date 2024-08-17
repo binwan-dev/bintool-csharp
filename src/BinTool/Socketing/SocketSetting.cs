@@ -4,6 +4,8 @@
     {
         public bool EnableReConnect { get; set; } = false;
 
+        public bool ConnectCloseSuccessReconnect { get; set; } = false;
+
         public int ReconnectBaseIntervalMillsecond { get; set; } = 3000;
         
         public int ReconnectMaxIntervalMillsecond { get; set; } = 60000;
