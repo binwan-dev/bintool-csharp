@@ -8,31 +8,36 @@ namespace System;
 public static class EnumExtension
 {
     private static IDictionary<string, IEnumDataList> _enumDicts = new Dictionary<string, IEnumDataList>();
+    private static object _lock = new();
 
     public static EnumData<T>[] GetEnumList<T>(this T value) where T : Enum
     {
         if (_enumDicts.TryGetValue(typeof(T).FullName, out var enums))
             return ((EnumDataList<T>) enums).EnumData.Values.ToArray();
 
-        var enumDataList = new EnumDataList<T>();
-        var typeT = typeof(T);
-        foreach (var field in typeT.GetFields(BindingFlags.Public | BindingFlags.Static))
+        lock (_lock)
         {
-            var enumData = new EnumData<T>();
-            enumData.Type = (T) Enum.Parse(typeT, field.Name);
-            enumData.Value = (int) Enum.Parse(typeT, field.Name);
-            enumData.Name = field.Name;
-            var attr = field.GetCustomAttribute<DescriptionAttribute>();
-            if (attr != null)
+            var enumDataList = new EnumDataList<T>();
+            var typeT = typeof(T);
+            foreach (var field in typeT.GetFields(BindingFlags.Public | BindingFlags.Static))
             {
-                enumData.Description = attr.Description;
+                var enumData = new EnumData<T>();
+                enumData.Type = (T) Enum.Parse(typeT, field.Name);
+                enumData.Value = (int) Enum.Parse(typeT, field.Name);
+                enumData.Name = field.Name;
+                var attr = field.GetCustomAttribute<DescriptionAttribute>();
+                if (attr != null)
+                {
+                    enumData.Description = attr.Description;
+                }
+
+                enumDataList.EnumData.Add(enumData.Name, enumData);
             }
 
-            enumDataList.EnumData.Add(enumData.Name, enumData);
+            if (!_enumDicts.ContainsKey(typeT.FullName))
+                _enumDicts.Add(typeT.FullName, enumDataList);
+            return enumDataList.EnumData.Values.ToArray();
         }
-
-        _enumDicts.Add(typeT.FullName, enumDataList);
-        return enumDataList.EnumData.Values.ToArray();
     }
     
     public static EnumData<T> GetEnumData<T>(this T value) where T : Enum
